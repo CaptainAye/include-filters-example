@@ -11,11 +11,17 @@ import org.springframework.context.annotation.FilterType;
 public class IncludeFiltersComponentScanTest {
 
     @Test
-    public void test_find_beans_which_start_with_Child_using_regex_pattern() {
+    public void test_find_beans_which_start_with_Child_using_child_regex_pattern() {
         AnnotationConfigApplicationContext ctx = new AnnotationConfigApplicationContext(ProperRegexPatternPrefixIncludeFiltersConfiguration.class);
         Assert.assertNotNull(ctx.getBean("childService"));
         Assert.assertNotNull(ctx.getBean("childComponent"));
         Assert.assertNotNull(ctx.getBean("childDao"));
+    }
+
+    @Test(expected = NoSuchBeanDefinitionException.class)
+    public void test_find_beans_which_start_with_Parent_using_child_regex_pattern() {
+        AnnotationConfigApplicationContext ctx = new AnnotationConfigApplicationContext(ProperRegexPatternPrefixIncludeFiltersConfiguration.class);
+        ctx.getBean("parentComponent");
     }
 
     @Test(expected = NoSuchBeanDefinitionException.class)
@@ -24,7 +30,13 @@ public class IncludeFiltersComponentScanTest {
         ctx.getBean("childService");
     }
 
-
+    @Test
+    public void test_find_beans_which_start_with_Child_using_brackets_pattern() {
+        AnnotationConfigApplicationContext ctx = new AnnotationConfigApplicationContext(BracketsPatternPrefixIncludeFiltersConfiguration.class);
+        Assert.assertNotNull(ctx.getBean("childService"));
+        //It should throw an exception, but it does not
+        Assert.assertNotNull(ctx.getBean("parentComponent"));
+    }
 }
 
 @Configuration
@@ -38,4 +50,10 @@ class ProperRegexPatternPrefixIncludeFiltersConfiguration { }
         useDefaultFilters = false,
         includeFilters = {@ComponentScan.Filter(type = FilterType.REGEX, pattern = "com.example.*.Child*")})
 class AntLikePatternPrefixIncludeFiltersConfiguration { }
+
+@Configuration
+@ComponentScan(basePackages = "com.example",
+        useDefaultFilters = false,
+        includeFilters = {@ComponentScan.Filter(type = FilterType.REGEX, pattern = "com.example.*.[Child]*")})
+class BracketsPatternPrefixIncludeFiltersConfiguration { }
 
